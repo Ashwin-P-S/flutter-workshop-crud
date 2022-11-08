@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:weather/push_data.dart';
 
 FirebaseOptions get fireBaseOptions => const FirebaseOptions(
       apiKey: "AIzaSyATpFxRrzbjnKvmdK7gAuuQFQ7clXLA0tI",
@@ -49,6 +50,11 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: ListTile(
+          title: Text("Inbox"),
+        ),
+      ),
       appBar: AppBar(title: Text("Home")),
       body: Padding(
         padding: EdgeInsets.all(50),
@@ -65,11 +71,11 @@ class _HomeState extends State<Home> {
                   ElevatedButton(
                     onPressed: () {
                       _formKey.currentState!.save();
-                      Map<String, dynamic> data = _formKey.currentState!.value
-                          .map((key, value) => MapEntry(key, value));
-                      records.add(data);
-                      _formKey.currentState!
-                          .patchValue({"Username": "", "Password": ""});
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PushData(
+                                  formKey: _formKey, records: records)));
                     },
                     child: Text("Submit"),
                   ),
@@ -82,7 +88,7 @@ class _HomeState extends State<Home> {
                     child: Text("Clear"),
                   ),
                 ],
-              ),
+              )
             ],
           ),
         ),
