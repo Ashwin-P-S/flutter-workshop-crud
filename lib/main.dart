@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
@@ -48,7 +48,9 @@ class _HomeState extends State<Home> {
               ),
               ElevatedButton(
                   onPressed: () {
-                    print(_formKey.currentState);
+                    _formKey.currentState!.patchValue({"Password": "12345"});
+                    _formKey.currentState!.save();
+                    print(_formKey.currentState!.value);
                   },
                   child: Text("Submit"))
             ],
