@@ -1,8 +1,21 @@
 // ignore_for_file: prefer_const_constructors, avoid_print
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() => runApp(MyApp());
+FirebaseOptions get fireBaseOptions => const FirebaseOptions(
+      apiKey: "AIzaSyATpFxRrzbjnKvmdK7gAuuQFQ7clXLA0tI",
+      appId: "1:41257800874:android:30c0bc241915d5f5706cd3",
+      messagingSenderId: "41257800874",
+      projectId: "weather-ashwi",
+    );
+
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: fireBaseOptions);
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -30,6 +43,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final _formKey = GlobalKey<FormBuilderState>();
+  CollectionReference records =
+      FirebaseFirestore.instance.collection('records');
 
   @override
   Widget build(BuildContext context) {
@@ -43,16 +58,31 @@ class _HomeState extends State<Home> {
             children: [
               FormBuilderTextField(name: "Username"),
               FormBuilderTextField(name: "Password"),
-              SizedBox(
-                height: 20,
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _formKey.currentState!.save();
+                      Map<String, dynamic> data = _formKey.currentState!.value
+                          .map((key, value) => MapEntry(key, value));
+                      records.add(data);
+                      _formKey.currentState!
+                          .patchValue({"Username": "", "Password": ""});
+                    },
+                    child: Text("Submit"),
+                  ),
+                  SizedBox(width: 50),
+                  ElevatedButton(
+                    onPressed: () {
+                      _formKey.currentState!
+                          .patchValue({"Username": "", "Password": ""});
+                    },
+                    child: Text("Clear"),
+                  ),
+                ],
               ),
-              ElevatedButton(
-                  onPressed: () {
-                    _formKey.currentState!.patchValue({"Password": "12345"});
-                    _formKey.currentState!.save();
-                    print(_formKey.currentState!.value);
-                  },
-                  child: Text("Submit"))
             ],
           ),
         ),
