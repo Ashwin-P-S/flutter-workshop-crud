@@ -66,7 +66,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.record.hashCode);
+    String operation = "submit";
 
     return Scaffold(
       drawer: Drawer(
@@ -129,19 +129,27 @@ class _HomeState extends State<Home> {
                   ElevatedButton(
                     onPressed: () {
                       _formKey.currentState!.save();
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PushData(
-                                  formKey: _formKey, records: records)));
+                      Map<String, dynamic> data = _formKey.currentState!.value
+                          .map((key, value) => MapEntry(key, value));
+                      var docId = data["DocumentId"];
+                      data..remove("DocumentId");
+
+                      if (docId == null) {
+                        records.add(data);
+                        _formKey.currentState!.patchValue(
+                            {"Username": "", "Password": "", "DocumentId": ""});
+                      } else {
+                        operation = "update";
+                        records.doc(docId).update(data);
+                      }
                     },
                     child: Text("Submit"),
                   ),
                   SizedBox(width: 50),
                   ElevatedButton(
                     onPressed: () {
-                      _formKey.currentState!
-                          .patchValue({"Username": "", "Password": ""});
+                      _formKey.currentState!.patchValue(
+                          {"Username": "", "Password": "", "DocumentId": ""});
                     },
                     child: Text("Clear"),
                   ),
