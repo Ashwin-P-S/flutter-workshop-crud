@@ -1,4 +1,4 @@
-import 'dart:html';
+// ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -41,12 +41,15 @@ class _UploadState extends State<Upload> {
               .currentState!
               .value
               .map((key, value) => MapEntry(key, value));
-          super.widget.records.add(data);
-          super
-              .widget
-              .formKey
-              .currentState!
-              .patchValue({"Username": "", "Password": ""});
+          data..remove("DocumentId");
+          if (!data.values.contains(null)) {
+            super.widget.records.add(data);
+            super
+                .widget
+                .formKey
+                .currentState!
+                .patchValue({"Username": "", "Password": ""});
+          }
         },
         child: Icon(Icons.upload),
       ),
