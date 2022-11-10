@@ -1,162 +1,112 @@
-// ignore_for_file: prefer_const_constructors, avoid_print
+// ignore_for_file: prefer_const_constructors
+import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:weather/module.dart';
-import 'package:weather/push_data.dart';
 
-FirebaseOptions get fireBaseOptions => const FirebaseOptions(
-      apiKey: "AIzaSyATpFxRrzbjnKvmdK7gAuuQFQ7clXLA0tI",
-      appId: "1:41257800874:android:30c0bc241915d5f5706cd3",
-      messagingSenderId: "41257800874",
-      projectId: "weather-ashwi",
-    );
+void main() => runApp(MyApp());
 
-Future main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: fireBaseOptions);
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Home(),
+      home: AnimatedSplashScreen(
+        splash: Icons.g_mobiledata,
+        nextScreen: Home(),
+        splashTransition: SplashTransition.fadeTransition,
+        pageTransitionType: PageTransitionType.fade,
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class Home extends StatefulWidget {
-  final record;
-  Home({super.key, this.record});
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  final _formKey = GlobalKey<FormBuilderState>();
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      funCall();
-    });
-  }
-
-  void funCall() {
-    if (widget.record == null || widget.record == '') return;
-    Map record = widget.record as Map;
-    record.forEach((key, value) {
-      _formKey.currentState!.patchValue({'$key': '$value'});
-    });
-  }
-
-  CollectionReference records =
-      FirebaseFirestore.instance.collection('records');
+class Home extends StatelessWidget {
+  const Home({super.key});
 
   @override
   Widget build(BuildContext context) {
-    String operation = "submit";
-
     return Scaffold(
-      drawer: Drawer(
+      appBar: AppBar(
+        title: Text("Home"),
+        backgroundColor: Colors.black,
+        bottomOpacity: 0,
+      ),
+      body: FormContainer(),
+    );
+    ;
+  }
+}
+
+class FormContainer extends StatefulWidget {
+  const FormContainer({super.key});
+
+  @override
+  State<FormContainer> createState() => _FormContainerState();
+}
+
+class _FormContainerState extends State<FormContainer> {
+  final _formKey = GlobalKey<FormBuilderState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(50),
+      child: FormBuilder(
+        key: _formKey,
         child: Column(
           children: [
-            ListTile(
-              title: Text(
-                "Login",
-                style: TextStyle(color: Colors.blue),
+            FormBuilderTextField(
+              validator: FormBuilderValidators.compose(
+                [
+                  FormBuilderValidators.required(
+                    errorText: "Please Enter Username",
+                  )
+                ],
               ),
-              hoverColor: Colors.blue.shade100,
-              onTap: () {
-                Navigator.pop(context);
-              },
+              name: "Username",
+              decoration: InputDecoration(
+                icon: Icon(Icons.account_circle),
+                labelText: "Username",
+              ),
             ),
-            ListTile(
-              title: Text(
-                "Database",
-                style: TextStyle(color: Colors.blue),
+            SizedBox(height: 20),
+            FormBuilderTextField(
+              validator: FormBuilderValidators.compose(
+                [
+                  FormBuilderValidators.required(
+                    errorText: "Please Enter Password",
+                  )
+                ],
               ),
-              hoverColor: Colors.blue.shade100,
-              onTap: () {
+              name: "Password",
+              decoration: InputDecoration(
+                  icon: Icon(Icons.password), labelText: "Password"),
+            ),
+            SizedBox(height: 50),
+            ElevatedButton(
+              onPressed: () {
+                _formKey.currentState!.save();
                 Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => Module()));
+                  context,
+                  PageTransition(
+                    duration: Duration(milliseconds: 500),
+                    alignment: Alignment.center,
+                    child: Module(formKey: _formKey),
+                    type: PageTransitionType.rightToLeft,
+                  ),
+                );
               },
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateColor.resolveWith((states) => Colors.black)),
+              child: Text("Login"),
             )
           ],
-        ),
-      ),
-      appBar: AppBar(title: Text("Home")),
-      body: Padding(
-        padding: EdgeInsets.all(100),
-        child: FormBuilder(
-          key: _formKey,
-          child: Column(
-            children: [
-              FormBuilderTextField(
-                name: "Username",
-                decoration: InputDecoration(labelText: "Username"),
-                style: TextStyle(color: Colors.blue),
-              ),
-              SizedBox(height: 10),
-              FormBuilderTextField(
-                name: "Password",
-                decoration: InputDecoration(labelText: "Password"),
-              ),
-              SizedBox(height: 10),
-              Visibility(
-                visible: true,
-                maintainState: true,
-                child: FormBuilderTextField(
-                  name: "DocumentId",
-                  decoration: InputDecoration(labelText: "Doucment Id"),
-                ),
-              ),
-              SizedBox(height: 100),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      _formKey.currentState!.save();
-                      Map<String, dynamic> data = _formKey.currentState!.value
-                          .map((key, value) => MapEntry(key, value));
-                      var docId = data["DocumentId"];
-                      data..remove("DocumentId");
-
-                      if (docId == null) {
-                        records.add(data);
-                        _formKey.currentState!.patchValue(
-                            {"Username": "", "Password": "", "DocumentId": ""});
-                      } else {
-                        operation = "update";
-                        records.doc(docId).update(data);
-                      }
-                    },
-                    child: Text("Submit"),
-                  ),
-                  SizedBox(width: 50),
-                  ElevatedButton(
-                    onPressed: () {
-                      _formKey.currentState!.patchValue(
-                          {"Username": "", "Password": "", "DocumentId": ""});
-                    },
-                    child: Text("Clear"),
-                  ),
-                ],
-              )
-            ],
-          ),
         ),
       ),
     );
